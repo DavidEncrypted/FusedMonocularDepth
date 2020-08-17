@@ -1,0 +1,5 @@
+**/bts/models/*
+*.pth
+*.npy
+*.png
+*.jpg

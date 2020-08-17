@@ -1,0 +1,10 @@
+--encoder densenet161_bts
+--data_path /media/david/LinuxStorage/dataset/data_depth_annotated/test
+--dataset kitti
+--filenames_file ./bts_config/kitti_filenames_full_test.txt
+--model_name bts_eigen_v2_pytorch_densenet161
+--checkpoint_path ./bts/models/bts_eigen_v2_pytorch_densenet161/model
+--input_height 352
+--input_width 1216
+--max_depth 80
+--do_kb_crop

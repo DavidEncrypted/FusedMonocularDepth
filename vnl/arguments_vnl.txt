@@ -1,0 +1,4 @@
+--dataroot ./
+--dataset any
+--cfg_file lib/configs/resnext101_32x4d_nyudv2_class
+--load_ckpt ./nyu_rawdata.pth

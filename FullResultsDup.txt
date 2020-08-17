@@ -1,0 +1,126 @@
+NYU:
+=================================================
+Table 1:
+
+Test -- NO SPLIT
+
+VNL
+d1,      d2,      d3,      AbsRel,  SqRel,   RMSE,    RMSElog,   SILog,    log10
+0.867,   0.973,   0.994,   0.116,   0.070,   0.406,   0.152,     12.519,   0.050
+
+
+Sharpnet
+d1,      d2,      d3,  AbsRel,   SqRel,    RMSE, RMSElog,   SILog,   log10
+0.868,   0.977,   0.995,   0.125,   0.072,   0.402,   0.154,  12.788,   0.050
+SHARPNET | RMS:  0.4015625
+
+
+BTS
+d1,      d2,      d3,      AbsRel,  SqRel,   RMSE,    RMSElog,   SILog,   log10
+0.885,   0.978,   0.994,   0.110,   0.066,   0.392,   0.142,     11.534,  0.047
+
+
+--------------------------------
+
+Fusion-median
+
+Test -- NO SPLIT
+
+d1,      d2,      d3,  AbsRel,   SqRel,    RMSE, RMSElog,   SILog,   log10
+0.904,   0.984,   0.997,   0.101,   0.053,   0.353,   0.131,  10.974,   0.043
+
+-------
+Fusion-avg
+
+Test -- VAL SPLIT
+
+d1,      d2,      d3,  AbsRel,   SqRel,    RMSE, RMSElog,   SILog,   log10
+0.910,   0.987,   0.997,   0.098,   0.048,   0.334,   0.126,  10.674,   0.041
+1.0  * BTS,  1.0  * VNL, 1.0  * SHARPNET | RMSE:  0.33364812
+
+
+-------
+Fusion-w-avg
+
+Test -- VAL SPLIT
+
+d1,      d2,      d3,  AbsRel,   SqRel,    RMSE, RMSElog,   SILog,   log10
+0.911 & 0.987 & 0.997 & 0.098 & 0.048 & 0.332 & 0.126,  10.706 & 0.041
+0.9620615072833809  * BTS,  0.8309236423351789  * VNL, 1.2018215719295504  * SHARPNET | RMSE:  0.3319993
+
+========================================================
+
+Table 2:
+
+Test -- VAL SPLIT
+
+BTS x VNL
+
+avg
+d1,      d2,      d3,  AbsRel,   SqRel,    RMSE, RMSElog,   SILog,   log10
+0.892 & 0.981 & 0.995 & 0.106 & 0.057 & 0.368 & 0.137,  11.159 & 0.046
+1.0  * BTS,  1.0  * VNL, 0.0  * SHARPNET | RMSE:  0.36765236
+
+w-avg
+d1,      d2,      d3,  AbsRel,   SqRel,    RMSE, RMSElog,   SILog,   log10
+0.893 & 0.981 & 0.995 & 0.105 & 0.057 & 0.367 & 0.137,  11.120 & 0.046
+1.0845581054687499  * BTS,  0.9005615234374998  * VNL, 0.0  * SHARPNET | RMSE:  0.36714673
+
+
+VNL x SN
+
+avg
+d1,      d2,      d3,  AbsRel,   SqRel,    RMSE, RMSElog,   SILog,   log10
+0.907 & 0.985 & 0.996 & 0.102 & 0.051 & 0.344 & 0.132,  11.370 & 0.042
+0.0  * BTS,  1.0  * VNL, 1.0  * SHARPNET | RMSE:  0.34433082
+
+w-avg
+d1,      d2,      d3,  AbsRel,   SqRel,    RMSE, RMSElog,   SILog,   log10
+0.907 & 0.985 & 0.996 & 0.103 & 0.051 & 0.344 & 0.132,  11.372 & 0.042
+0.0  * BTS,  0.99951171875  * VNL, 1.013427734375  * SHARPNET | RMSE:  0.3442946
+
+
+BTS x SN
+
+avg
+d1,      d2,      d3,  AbsRel,   SqRel,    RMSE, RMSElog,   SILog,   log10
+0.906 & 0.984 & 0.997 & 0.102 & 0.052 & 0.340 & 0.129,  10.905 & 0.042
+1.0  * BTS,  0.0  * VNL, 1.0  * SHARPNET | RMSE:  0.34015083
+
+w-avg
+d1,      d2,      d3,  AbsRel,   SqRel,    RMSE, RMSElog,   SILog,   log10
+0.906 & 0.984 & 0.997 & 0.101 & 0.052 & 0.340 & 0.129,  10.870 & 0.042
+1.053424072265625  * BTS,  0.0  * VNL, 0.94737548828125  * SHARPNET | RMSE:  0.34000456
+
+
+=========================================================
+KITTI
+----------------------------------------------
+
+Test -- NO SPLIT
+
+Table 3:
+VNL
+   d1,      d2,      d3,  AbsRel,   SqRel,    RMSE, RMSElog,   SILog,   log10
+0.937,   0.989,   0.997,   0.075,   0.328,   3.237,   0.115,  10.758,   0.033
+
+
+BTS
+   d1,      d2,      d3,  AbsRel,   SqRel,    RMSE, RMSElog,   SILog,   log10
+0.955,   0.993,   0.998,   0.060,   0.249,   2.798,   0.096,   8.933,   0.027
+
+
+
+--------------------------------
+Test -- VAL SPLIT
+
+Fusion-avg
+d1,      d2,      d3,  AbsRel,   SqRel,    RMSE, RMSElog,   SILog,   log10
+0.953 & 0.993 & 0.999 & 0.061 & 0.248 & 2.872 & 0.098 & 9.180 & 0.027
+1.0  * BTS,  1.0  * VNL | RMSE:  2.8715653
+
+
+Fusion-w-avg
+d1,      d2,      d3,  AbsRel,   SqRel,    RMSE, RMSElog,   SILog,   log10
+0.956 & 0.993 & 0.999 & 0.058 & 0.238 & 2.804 & 0.095 & 8.883 & 0.026
+1.552671813964844  * BTS,  0.41797485351562336  * VNL | RMSE:  2.804052
