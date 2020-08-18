@@ -83,12 +83,9 @@ class bts_obj():
         arg_filename_with_prefix = '@' + arguments_filename
         self.args = parser.parse_args([arg_filename_with_prefix])
 
-        print(self.args.data_path)
         self.args.data_path = dataset_path
         self.args.filenames_file = filenames_path
-        print(self.args.data_path)
-        print(self.args.filenames_file)
-
+        
         model_dir = os.path.dirname(self.args.checkpoint_path)
         sys.path.append(model_dir)
 
@@ -110,35 +107,23 @@ class bts_obj():
 
 
     def run(self):
-
-        # image = np.asarray(Image.open(image_path), dtype=np.float32) / 255.0
-        # focal = 518.8579
         pred_depths = []
         with torch.no_grad():
             for _, sample in enumerate(tqdm(self.dataloader.data)):
+                # Load image into model
                 image = Variable(sample['image'].cuda())
                 focal = Variable(sample['focal'].cuda())
                 image_path = sample['image_path'][0]
-                #print(image_path)
+                # Run model
                 _, _, _, _, depth_est = self.model(image, focal)
-                #print(os.sep.join(os.path.normpath(image_path).split(os.sep)[-5:]))
+
+                # Calculate image path
                 if self.dataset == "kitti":
                     partial_image_path = os.sep.join(os.path.normpath(image_path).split(os.sep)[-5:])
                 else:
                     partial_image_path = os.sep.join(os.path.normpath(image_path).split(os.sep)[-2:])
+                # Store depth prediction and image path
                 outsample = {'pred_depth': depth_est.cpu().numpy().squeeze(), 'image_path': partial_image_path}
-                #pred_depths.append(depth_est.cpu().numpy().squeeze())
                 pred_depths.append(outsample)
-            # image = self.to_tensor(image)
-            # print("image to_tensor shape: ", image.shape)
-            # image = self.normalize(image)
-            #
-            # image = Variable(image.cuda())
-            # #focal = Variable(focal.cuda())
-            # print("image tensor shape: ", image.shape)
-            # print("image tensor: ", image)
-            # _, _, _, _, depth_est = self.model(image, focal)
-            #
-            # depth_est = depth_est.cpu().numpy().squeeze()
 
         return pred_depths

@@ -4,16 +4,16 @@ import sys
 from scipy.optimize import minimize
 from astropy.stats import sigma_clip
 
-
+# Calculate the average of the arrays using the weights i,j,k
 def calcmean3(array1, array2, array3, i, j, k):
     return ((array1 * i) + (array2 * j) + (array3 * k)) / (i+j+k)
 
+# Calculate the average of the arrays using the weights i,j
 def calcmean2(array1, array2, i, j):
     return (((array1 * i) + (array2 * j))/ (i+j))
 
+# Calculate the errors between the prediction and the gt
 def compute_errors(gt, pred):
-    #print(gt[100], pred[100])
-    #print(len(gt), len(pred))
     thresh = np.maximum((gt / pred), (pred / gt))
     d1 = (thresh < 1.25).mean()
     d2 = (thresh < 1.25 ** 2).mean()

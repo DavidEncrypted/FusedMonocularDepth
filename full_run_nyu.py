@@ -9,9 +9,6 @@ import os
 
 
 if __name__ == '__main__':
-
-
-
     parser = argparse.ArgumentParser(description='Fuse NYU run')
 
     parser.add_argument('--cfg_dir', type=str, help='Path to config dir', default='./bts_config/')
@@ -19,8 +16,6 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_path', type=str, help='Path to the dataset dir', default='./datasets/nyu/')
     parser.add_argument('--filenames_path', type=str, help='Path to the filenames file', default='bts_config/bts_filenames_full_test.txt')
     parser.add_argument('--save_name', type=str, help='Appends \"_*save_name*\" to the model names in the save path', default='')
-
-    # '../dataset/nyu_depth_v2/official_splits/test2/'
 
     args = parser.parse_args()
 
@@ -37,8 +32,6 @@ if __name__ == '__main__':
 
     print("RUNNING SHARPNET")
     sharpnetoutarray = sharpnet.run(args.filenames_path, os.path.join(args.dataset_path, "test"), True)
-
-
 
     print("RUNNING VNL")
     vnloutarray = vnl.run(args.filenames_path, os.path.join(args.dataset_path, "test"))

@@ -18,10 +18,6 @@ cuda_device = 0
 def round_down(num, divisor):
     return num - (num % divisor)
 
-
-
-
-
 class sharpnet_obj():
     def __init__(self, dataset="nyu"):
         self.dataset = dataset
@@ -57,28 +53,23 @@ class sharpnet_obj():
         mean_BGR = np.array([mean_RGB[2], mean_RGB[1], mean_RGB[0]])
 
     def run(self, imgfilelist, basedatasetpath, white):
-        print(imgfilelist)
-        print(basedatasetpath)
-
         pred_depths = []
         num_lines = sum(1 for line in open(imgfilelist,'r'))
         with open(imgfilelist, 'r') as f:
             for _, line in enumerate(tqdm(f, total=num_lines)):
-                #print(line.split()[0])
                 imgname = line.split()[0]
+                # Remove W from iamge name
                 if white:
                     imgname = imgname.replace(".jpg", "W.jpg")
-                #print(imgname.replace(".jpg", "W.jpg"))
                 fullpath = os.path.join(basedatasetpath, imgname)
-                #print(fullpath)
 
                 with torch.no_grad():
+                    # Load image
                     image_pil = Image.open(fullpath)
                     w, h = image_pil.size
-
-
+                    # Run model
                     pred_depth = self.get_pred_from_input(image_pil)
-                    #pred_depth = pred_depth.cpu().numpy().squeeze()
+
                     if self.dataset == "kitti":
                         partial_image_path = os.sep.join(os.path.normpath(fullpath).split(os.sep)[-5:])
                     else:
@@ -87,7 +78,6 @@ class sharpnet_obj():
 
                     pred_depths.append(outsample)
         return pred_depths
-
 
     def get_pred_from_input(self, image_pil):
         normals = None
@@ -140,16 +130,3 @@ class sharpnet_obj():
         depth_pred = depth_pred.data.cpu().numpy() * 65535 / 1000
 
         return depth_pred[0][0]
-
-#
-# python3 demo.py --image /home/david/workspace/combi/dataout/vis/ori_out/ori_nyu_image_0.png \
-# --cuda 0\
-# --model models/final_checkpoint_NYU.pth \
-# --normals \
-# --depth \
-# --boundary \
-# --bias \
-# --scale 1
-
-
-#python3 demo.py --image /home/david/workspace/combi/dataout/vis/ori_out/ori_nyu_image_0.png --cuda 0 --model models/final_checkpoint_NYU.pth --normals --depth --boundary --bias --scale 1 --outpath ./outdemo

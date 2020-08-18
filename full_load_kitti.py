@@ -13,19 +13,18 @@ min_depth_eval = 1e-3
 max_depth_eval = 80
 dataset = "kitti"
 
+# Evaluate the predicted depths using the ground truth using only the RMSE
 def eval_rmse(pred_depths, gt, missing_i_samples):
     num_samples = len(pred_depths)
-
     pred_depths_valid = []
-
 
     for t_id in range(num_samples):
         if t_id in missing_i_samples:
             continue
-
         pred_depths_valid.append(pred_depths[t_id])
+
+    # Remove missing samples
     num_samples = num_samples - len(missing_i_samples)
-    #print("removed: ", len(pred_depths) - len(pred_depths_valid), " samples")
 
     pred_depths = pred_depths_valid
     rms = np.zeros(num_samples, np.float32)
@@ -70,20 +69,17 @@ def eval_rmse(pred_depths, gt, missing_i_samples):
         rms[i] = compute_rmse(gt_depth[valid_mask], pred_depth[valid_mask])
     return rms
 
+# Evaluate the predicted depths using the ground truth
 def eval(pred_depths, gt, missing_i_samples):
-
     num_samples = len(pred_depths)
     pred_depths_valid = []
-
 
     for t_id in range(num_samples):
         if t_id in missing_i_samples:
             continue
-
         pred_depths_valid.append(pred_depths[t_id])
 
     num_samples = num_samples - len(missing_i_samples)
-    #print("removed: ", len(pred_depths) - len(pred_depths_valid), " samples")
     pred_depths = pred_depths_valid
 
     silog = np.zeros(num_samples, np.float32)
@@ -98,8 +94,6 @@ def eval(pred_depths, gt, missing_i_samples):
 
     i = 0
     for i in range(num_samples):
-
-
         gt_depth = gt[i]
         pred_depth = pred_depths[i]
 
@@ -145,13 +139,14 @@ def eval(pred_depths, gt, missing_i_samples):
 
     return silog, log10, abs_rel, sq_rel, rms, log_rms, d1, d2, d3
 
+# Load the ground truth using the data in the outarray.
 def loadgt(outarray, config_dir, ds_dir):
+    # Count missing samples
     missing_i_samples = []
-
     missing_i_samples_train = []
-
     missing_i_samples_val = []
 
+    # Get all filenames part of the train set
     filenames_train = config_dir + "kitti_filenames_full_test_train.txt"
     filetrain = []
     with open(filenames_train, 'r') as f:
@@ -161,13 +156,13 @@ def loadgt(outarray, config_dir, ds_dir):
     outarray_train = []
     outarray_val = []
 
-
     gt_depths = []
 
     i_train = 0
     i_val = 0
     for i_sample in range(len(outarray)):
 
+        # Calculate gt depth path
         path = outarray[i_sample]['image_path']
         gt_depth_path = os.path.join(ds_dir, "gt", path.rsplit('/',4)[1], "proj_depth/groundtruth/image_02/", path.rsplit('/',1)[1][:-4] + ".png")
         name = '/'.join(path.split('/')[-5:])
@@ -175,22 +170,21 @@ def loadgt(outarray, config_dir, ds_dir):
         if name[0] == '.':
             name = name[2:]
 
+        # Read gt depth image
         depth = cv2.imread(gt_depth_path, -1)
+        # Check if missing
         if depth is None:
-            #print('Missing: %s ' % gt_depth_path)
             missing_i_samples.append(i_sample)
-
             if name in filetrain:
                 missing_i_samples_train.append(i_train)
                 i_train += 1
             else:
                 missing_i_samples_val.append(i_val)
                 i_val += 1
-
             continue
 
+        # Scale gt depth
         depth = depth.astype(np.float32) / 256.0
-
 
         if name in filetrain:
             outarray_train.append(depth)
@@ -202,19 +196,19 @@ def loadgt(outarray, config_dir, ds_dir):
 
     print("num gt: ", len(gt_depths))
     print("num GT missing: ", len(missing_i_samples))
-    #print("gt train: ", len(outarray_train))
-    #print("gt val: ", len(outarray_val))
-    #print("i_train", i_train)
-    #print("i_val", i_val)
     return gt_depths, outarray_train, outarray_val, missing_i_samples, missing_i_samples_val, missing_i_samples_train
 
+# Combine the input models according to the weights in y
+# Output the calculated metrics
 def print_array(y, bts, vnl, gt, mis_sam):
     calcoutarray = []
+    # Loop through samples
     for btssample, vnlsample in zip(bts, vnl):
-
 
         btsdepth = btssample['pred_depth']
         vnldepth = vnlsample['pred_depth']
+
+        # VNL outputs depth that needs to be scaled by 80 to be compatible with BTS outputted depth
         vnldepth = vnldepth * 80.0
 
         # do calculation
@@ -230,6 +224,7 @@ def eval_array(y, bts, vnl, gt, mis_sam):
     for btssample, vnlsample in zip(bts, vnl):
         btsdepth = btssample['pred_depth']
         vnldepth = vnlsample['pred_depth']
+        # VNL outputs depth that needs to be scaled by 80 to be compatible with BTS outputted depth
         vnldepth = vnldepth * 80.0
 
         # do calculation
@@ -240,7 +235,7 @@ def eval_array(y, bts, vnl, gt, mis_sam):
     print(y[0], y[1], rms.mean())
     return rms.mean()
 
-
+# Split array into train and validate sets
 def splitarray(array, config_dir):
 
     filenames_train = config_dir + "kitti_filenames_full_test_train.txt"
@@ -257,10 +252,8 @@ def splitarray(array, config_dir):
     outarray_val = []
 
     for sample in array:
-
         normpath = os.path.normpath(sample['image_path'])
         name = '/'.join(normpath.split('/')[-5:])
-
 
         if name[0] == '.':
             name = name[2:]
@@ -274,7 +267,6 @@ def splitarray(array, config_dir):
 
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser(description='Fuse KITTI load')
 
     parser.add_argument('--cfg_dir', type=str, help='Path to config dir', default='./bts_config/')
@@ -297,14 +289,12 @@ if __name__ == '__main__':
         print("loading: ", args.load_dir_path + 'kitti_vnl_' + args.save_name + '.npy')
         vnloutarray = np.load(args.load_dir_path + 'kitti_vnl_' + args.save_name + '.npy', allow_pickle=True)
 
-
+    # Split arrays
     btsoutarray_train, btsoutarray_val = splitarray(btsoutarray, args.cfg_dir)
     vnloutarray_train, vnloutarray_val = splitarray(vnloutarray, args.cfg_dir)
 
     print("Loading ground truths")
-
     gt_depths, gt_depths_train, gt_depths_val, missing_i_samples, missing_i_samples_val, missing_i_samples_train = loadgt(btsoutarray, args.cfg_dir, args.dataset_path)
-
 
 
     # ==========================
