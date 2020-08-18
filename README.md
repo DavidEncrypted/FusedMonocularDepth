@@ -101,6 +101,4 @@ The scripts allow certain other arguments. Use `-h` to show them.
 
 
 # TODO
-- [ ] Better comments.
-- [ ] Remove unneccessary prints
 - [ ] Add script to process a single image and output the depth
