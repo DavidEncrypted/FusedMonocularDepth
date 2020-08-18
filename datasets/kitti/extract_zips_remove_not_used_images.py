@@ -3,7 +3,7 @@ import glob
 from zipfile import ZipFile
 import sys
 
-basedir = "data_depth_annotated/test"
+basedir = "./data_depth_annotated/test"
 
 filenames = []
 with open("eigen_test_files_with_gt.txt", 'r') as f:

@@ -15,7 +15,7 @@ if __name__ == '__main__':
     parser.add_argument('--cfg_dir', type=str, help='Path to config dir', default='./bts_config/')
     # parser.add_argument('--bts_args_path', type=str, help='Path to bts args file', default='./bts_config/kitti_bts_arguments_partial_test_eigen.txt')
     parser.add_argument('--save_path', type=str, help='Path to the save dir', default='./data_save/')
-    parser.add_argument('--dataset_path', type=str, help='Path to the dataset dir', default='./datasets/kitti/')
+    parser.add_argument('--dataset_path', type=str, help='Path to the dataset dir', default='./datasets/kitti/data_depth_annotated/')
     parser.add_argument('--filenames_path', type=str, help='Path to the filenames file', default='./bts_config/kitti_filenames_full_test.txt')
     parser.add_argument('--save_name', type=str, help='Appends \"_*save_name*\" to the model names in the save path', default='')
 
