@@ -5,11 +5,15 @@ from scipy.optimize import minimize
 from astropy.stats import sigma_clip
 
 
-def calcmean(array1, array2, array3, i, j, k):
+def calcmean3(array1, array2, array3, i, j, k):
     return ((array1 * i) + (array2 * j) + (array3 * k)) / (i+j+k)
+
+def calcmean2(array1, array2, i, j):
+    return (((array1 * i) + (array2 * j))/ (i+j))
 
 def compute_errors(gt, pred):
     #print(gt[100], pred[100])
+    #print(len(gt), len(pred))
     thresh = np.maximum((gt / pred), (pred / gt))
     d1 = (thresh < 1.25).mean()
     d2 = (thresh < 1.25 ** 2).mean()

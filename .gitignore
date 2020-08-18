@@ -3,3 +3,4 @@
 *.npy
 *.png
 *.jpg
+datasets/nyu_depth_v2_labeled.mat

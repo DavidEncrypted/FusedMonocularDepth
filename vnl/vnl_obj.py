@@ -19,7 +19,7 @@ from tqdm import tqdm
 class vnl_obj():
     def __init__(self, dataset="nyu"):
         print("VNL init")
-
+        self.dataset = dataset
         if dataset == "nyu":
             test_args = Namespace(batchsize=2, cfg_file='lib/configs/resnext101_32x4d_nyudv2_class', dataroot='./', dataset='any', epoch=30, load_ckpt='./nyu_rawdata.pth', phase='test', phase_anno='test', results_dir='./evaluation', resume=False, start_epoch=0, start_step=0, thread=4, use_tfboard=False)
         elif dataset == "kitti":
@@ -61,11 +61,12 @@ class vnl_obj():
                 #print(line.split()[0])
                 imgname = line.split()[0]
                 #imgname = imgname.replace(".jpg", "W.jpg")
-                fullpath = basedatasetpath + imgname
+                fullpath = os.path.join(basedatasetpath, imgname)
                 #print(fullpath)
 
                 with torch.no_grad():
                     img = cv2.imread(fullpath)
+
                     img_resize = cv2.resize(img, (int(img.shape[1]), int(img.shape[0])), interpolation=cv2.INTER_LINEAR)
                     img_torch = scale_torch(img_resize, 255)
                     img_torch = img_torch[None, :, :, :].cuda()
@@ -74,7 +75,12 @@ class vnl_obj():
                     pred_depth = bins_to_depth(pred_depth_softmax)
                     pred_depth = pred_depth.cpu().numpy().squeeze()
 
-                    outsample = {'pred_depth': pred_depth, 'image_path': fullpath}
+
+                    if self.dataset == "kitti":
+                        partial_image_path = os.sep.join(os.path.normpath(fullpath).split(os.sep)[-5:])
+                    else:
+                        partial_image_path = os.sep.join(os.path.normpath(fullpath).split(os.sep)[-2:])
+                    outsample = {'pred_depth': pred_depth, 'image_path': partial_image_path}
 
                     pred_depths.append(outsample)
         return pred_depths

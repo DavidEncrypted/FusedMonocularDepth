@@ -5,6 +5,7 @@ from scipy.optimize import minimize
 from astropy.stats import sigma_clip
 import argparse
 from compute_eval import *
+import os
 
 eigen_crop = True
 min_depth_eval = 1e-3
@@ -70,6 +71,7 @@ def eval(pred_depths, gt):
     for i in range(num_samples):
 
         gt_depth = gt[i]
+        #print(gt_depth)
         pred_depth = pred_depths[i]
 
         pred_depth[pred_depth < min_depth_eval] = min_depth_eval
@@ -91,7 +93,10 @@ def eval(pred_depths, gt):
                 eval_mask[45:471, 41:601] = 1
 
             valid_mask = np.logical_and(valid_mask, eval_mask)
-
+        #print("--------")
+        #print(gt_depth)
+        #print(gt_depth[valid_mask])
+        #print(pred_depth[valid_mask])
         silog[i], log10[i], abs_rel[i], sq_rel[i], rms[i], log_rms[i], d1[i], d2[i], d3[i] = compute_errors(gt_depth[valid_mask], pred_depth[valid_mask])
 
     print("{:>7}, {:>7}, {:>7}, {:>7}, {:>7}, {:>7}, {:>7}, {:>7}".format(
@@ -102,11 +107,11 @@ def eval(pred_depths, gt):
 
     return silog, log10, abs_rel, sq_rel, rms, log_rms, d1, d2, d3
 
-def loadgt(outarray):
+def loadgt(outarray, config_dir, ds_dir):
     missing_ids = 0
     gt_depths = []
 
-    filenames_train = "bts_config/bts_filenames_full_test_train.txt"
+    filenames_train = os.path.join(config_dir,"bts_filenames_full_test_train.txt")
     filetrain = []
     with open(filenames_train, 'r') as f:
         for line in f:
@@ -118,21 +123,26 @@ def loadgt(outarray):
     for sample in outarray:
 
         path = sample['image_path']
+        #print(path)
+        #print(os.path.split(path))
+        gt_depth_path = os.path.join(ds_dir, "test", os.path.split(path)[0], "sync_depth_" + os.path.split(path)[1][4:-4] + ".png")
+        #gt_depth_path = path.rsplit('/',1)[0] + "/sync_depth_" + path.rsplit('/',1)[1][4:-4] + ".png"
 
-        gt_depth_path = path.rsplit('/',1)[0] + "/sync_depth_" + path.rsplit('/',1)[1][4:-4] + ".png"
-
-        splitar = path.rsplit('/',2)
-        name = splitar[1] + '/' + splitar[2]
+        #splitar = path.rsplit('/',2)
+        name = sample['image_path']
         #print(name)
+        # print(name)
+        # print(gt_depth_path)
+        # print("------------")
 
         depth = cv2.imread(gt_depth_path, -1)
         if depth is None:
             print('Missing: %s ' % gt_depth_path)
             missing_ids += 1
             continue
-
+        #print(depth)
         depth = depth.astype(np.float32) / 1000.0
-
+        #print(depth)
 
         if name in filetrain:
             outarray_train.append(depth)
@@ -140,41 +150,10 @@ def loadgt(outarray):
             outarray_val.append(depth)
 
         gt_depths.append(depth)
-
-    #print("num gt: ", len(gt_depths))
-    #print("num GT missing: ", missing_ids)
+        #print(depth)
+    print("num gt: ", len(gt_depths))
+    print("num GT missing: ", missing_ids)
     return gt_depths, outarray_train, outarray_val
-
-def loadnewgt(outarray):
-    missing_ids = 0
-    gt_depths = []
-    for sample in outarray:
-
-        path = sample['image_path']
-
-        if not test:
-            gt_depth_path = path.rsplit('/',1)[0] + "/sync_depth_" + path.rsplit('/',1)[1][4:-4] + ".png"
-        else:
-            gt_depth_path = path.rsplit('/',1)[0] + "/sync_depth_" + path.rsplit('/',1)[1][4:-4] + ".png"
-
-        if test:
-            gt_depth_path = gt_depth_path.replace("test", "test2")
-        else:
-            gt_depth_path = gt_depth_path.replace("train", "train2")
-
-
-        depth = cv2.imread(gt_depth_path, -1)
-        if depth is None:
-            print('Missing: %s ' % gt_depth_path)
-            missing_ids += 1
-            continue
-
-        depth = depth.astype(np.float32) / 6553.0
-        gt_depths.append(depth)
-
-    #print("num gt: ", len(gt_depths))
-    #print("num GT missing: ", missing_ids)
-    return gt_depths
 
 def print_array(y, choice, bts, vnl, sn, gt):
     x = np.array([0.0,0.0,0.0])
@@ -202,12 +181,15 @@ def print_array(y, choice, bts, vnl, sn, gt):
 
 
         btsdepth = btssample['pred_depth']
+        #print(btsdepth)
         vnldepth = vnlsample['pred_depth']
         vnldepth = vnldepth * 10.0
         sharpnetdepth = sharpnetsample['pred_depth']
         # do calculation
-        calcdepth = calcmean(btsdepth, vnldepth, sharpnetdepth, x[0], x[1], x[2])
+        calcdepth = calcmean3(btsdepth, vnldepth, sharpnetdepth, x[0], x[1], x[2])
+        #print(calcdepth)
         calcoutarray.append(calcdepth)
+        #print(calcdepth)
 
     _,_,_,_,rms,_,_,_,_ = eval(calcoutarray, gt)
     #rms = eval(calcoutarray)
@@ -223,7 +205,7 @@ def eval_array(x, bts, vnl, sn, gt):
         vnldepth = vnldepth * 10.0
         sharpnetdepth = sharpnetsample['pred_depth']
         # do calculation
-        calcdepth = calcmean(btsdepth, vnldepth, sharpnetdepth, x[0], x[1], x[2])
+        calcdepth = calcmean3(btsdepth, vnldepth, sharpnetdepth, x[0], x[1], x[2])
         calcoutarray.append(calcdepth)
 
     met = eval_met(calcoutarray, 1, gt) # rmse
@@ -249,7 +231,7 @@ def eval_two_array(y, choice, bts, vnl, sn, gt):
         vnldepth = vnldepth * 10.0
         sharpnetdepth = sharpnetsample['pred_depth']
         # do calculation
-        calcdepth = calcmean(btsdepth, vnldepth, sharpnetdepth, x[0], x[1], x[2])
+        calcdepth = calcmean3(btsdepth, vnldepth, sharpnetdepth, x[0], x[1], x[2])
         calcoutarray.append(calcdepth)
 
     met = eval_met(calcoutarray, 1, gt)
@@ -273,6 +255,7 @@ def eval_median(bts, vnl, sn, gt):
         calcoutarray.append(calcdepth)
     print("Median:")
     eval(calcoutarray, gt)
+    print("\n")
     return calcoutarray, pathoutarray
 
 def eval_vis(x0,x1,x2):
@@ -286,7 +269,7 @@ def eval_vis(x0,x1,x2):
         # do calculation
         #calcdepth = dict.fromkeys(['image_path', 'pred_depth'])
 
-        calcdepth = calcmean(btsdepth, vnldepth, sharpnetdepth, x0,x1,x2)
+        calcdepth = calcmean3(btsdepth, vnldepth, sharpnetdepth, x0,x1,x2)
 
 
         #calcdepth = np.median([btsdepth, vnldepth, sharpnetdepth], axis=0)
@@ -365,11 +348,10 @@ def out_vis(outdir, firstname, deptharray, patharray):
         cv2.imwrite(outpath, color_meanscaled, [cv2.IMWRITE_PNG_COMPRESSION, 0])
         n += 1
 
+def splitarray(array, cfg_dir):
 
-def splitarray(array):
-
-    filenames_train = "bts_config/bts_filenames_full_test_train.txt"
-    filenames_val = "bts_config/bts_filenames_full_test_val.txt"
+    filenames_train = os.path.join(cfg_dir, "bts_filenames_full_test_train.txt")
+    filenames_val = os.path.join(cfg_dir, "bts_filenames_full_test_val.txt")
 
     filetrain = []
     fileval = []
@@ -382,22 +364,23 @@ def splitarray(array):
     outarray_val = []
 
     for sample in array:
-        splitar = sample['image_path'].rsplit('/',2)
-        name = splitar[1] + '/' + splitar[2]
-        #print(name)
-        if name in filetrain:
+        #print(sample['image_path'])
+        # normpath = os.path.normpath(sample['image_path'])
+        # name = '/'.join(normpath.split('/')[-2:])
+
+        #name = splitar[1] + '/' + splitar[2]
+        #print(sample['image_path'])
+        if sample['image_path'] in filetrain:
             outarray_train.append(sample)
         else:
             outarray_val.append(sample)
 
-    #print("train: ", len(outarray_train))
-    #print("val: ", len(outarray_val))
     return outarray_train, outarray_val
 
-def splitarray_white(array):
+def splitarray_white(array, cfg_dir):
 
-    filenames_train = "bts_config/bts_filenames_full_test_train.txt"
-    filenames_val = "bts_config/bts_filenames_full_test_val.txt"
+    filenames_train = os.path.join(cfg_dir, "bts_filenames_full_test_train.txt")
+    filenames_val = os.path.join(cfg_dir, "bts_filenames_full_test_val.txt")
 
     filetrain = []
     fileval = []
@@ -410,8 +393,8 @@ def splitarray_white(array):
     outarray_val = []
 
     for sample in array:
-        splitar = sample['image_path'].rsplit('/',2)
-        name = splitar[1] + '/' + splitar[2]
+        #splitar = sample['image_path'].rsplit('/',2)
+        name = sample['image_path']
         #print(name)
         name = name.replace("W.jpg", ".jpg")
         #print(name)
@@ -420,8 +403,6 @@ def splitarray_white(array):
         else:
             outarray_val.append(sample)
 
-    #print("train: ", len(outarray_train))
-    #print("val: ", len(outarray_val))
     return outarray_train, outarray_val
 
 
@@ -429,10 +410,11 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Fuse NYU load')
 
+    parser.add_argument('--cfg_dir', type=str, help='Path to config dir', default='./bts_config/')
     parser.add_argument('--load_dir_path', type=str, help='Path to the dir where the binary files to load are stored', default='./data_save/')
     parser.add_argument('--save_name', type=str, help='The additional save name provided in the run script. Leave empty if not used.', default='')
     parser.add_argument('--run_optimizations', help='Run all weighted average optimizations', action='store_true')
-
+    parser.add_argument('--dataset_path', type=str, help='Path to the dataset dir', default='./datasets/nyu/')
 
     args = parser.parse_args()
 
@@ -446,14 +428,17 @@ if __name__ == '__main__':
         vnloutarray = np.load(args.load_dir_path + 'nyu_vnl_' + args.save_name + '.npy', allow_pickle=True)
         sharpnetoutarray = np.load(args.load_dir_path + 'nyu_sharpnet_' + args.save_name + '.npy', allow_pickle=True)
 
-    btsoutarray_train, btsoutarray_val = splitarray(btsoutarray)
-    vnloutarray_train, vnloutarray_val = splitarray(vnloutarray)
-    sharpnetoutarray_train, sharpnetoutarray_val = splitarray_white(sharpnetoutarray)
+    btsoutarray_train, btsoutarray_val = splitarray(btsoutarray, args.cfg_dir)
+    vnloutarray_train, vnloutarray_val = splitarray(vnloutarray, args.cfg_dir)
+    sharpnetoutarray_train, sharpnetoutarray_val = splitarray_white(sharpnetoutarray, args.cfg_dir)
 
 
 
-    gt_depths, gt_depths_train, gt_depths_val = loadgt(btsoutarray)
 
+    gt_depths, gt_depths_train, gt_depths_val = loadgt(btsoutarray, args.cfg_dir, args.dataset_path)
+
+    print(len(gt_depths))
+    #print(btsoutarray[)
     # ==========================
     # Table 1
     # ==========================

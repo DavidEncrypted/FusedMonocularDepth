@@ -57,9 +57,9 @@ def _is_numpy_image(img):
 
 
 class bts_obj():
-    def __init__(self, arguments_filename):
+    def __init__(self, arguments_filename, filenames_path, dataset_path, dataset="nyu"):
         print("BTS init")
-
+        self.dataset = dataset
         self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
         parser = argparse.ArgumentParser(description='BTS PyTorch implementation.', fromfile_prefix_chars='@')
@@ -82,6 +82,12 @@ class bts_obj():
 
         arg_filename_with_prefix = '@' + arguments_filename
         self.args = parser.parse_args([arg_filename_with_prefix])
+
+        print(self.args.data_path)
+        self.args.data_path = dataset_path
+        self.args.filenames_file = filenames_path
+        print(self.args.data_path)
+        print(self.args.filenames_file)
 
         model_dir = os.path.dirname(self.args.checkpoint_path)
         sys.path.append(model_dir)
@@ -115,8 +121,12 @@ class bts_obj():
                 image_path = sample['image_path'][0]
                 #print(image_path)
                 _, _, _, _, depth_est = self.model(image, focal)
-
-                outsample = {'pred_depth': depth_est.cpu().numpy().squeeze(), 'image_path': image_path}
+                #print(os.sep.join(os.path.normpath(image_path).split(os.sep)[-5:]))
+                if self.dataset == "kitti":
+                    partial_image_path = os.sep.join(os.path.normpath(image_path).split(os.sep)[-5:])
+                else:
+                    partial_image_path = os.sep.join(os.path.normpath(image_path).split(os.sep)[-2:])
+                outsample = {'pred_depth': depth_est.cpu().numpy().squeeze(), 'image_path': partial_image_path}
                 #pred_depths.append(depth_est.cpu().numpy().squeeze())
                 pred_depths.append(outsample)
             # image = self.to_tensor(image)

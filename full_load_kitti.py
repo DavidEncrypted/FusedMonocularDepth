@@ -4,6 +4,7 @@ import sys
 from scipy.optimize import minimize
 import argparse
 import os
+from compute_eval import *
 
 eigen_crop = False
 do_kb_crop = True
@@ -11,39 +12,6 @@ garg_crop = True
 min_depth_eval = 1e-3
 max_depth_eval = 80
 dataset = "kitti"
-
-
-def calcmean(array1, array2, i, j):
-    return (((array1 * i) + (array2 * j))/ (i+j))
-
-def compute_errors(gt, pred):
-    thresh = np.maximum((gt / pred), (pred / gt))
-    d1 = (thresh < 1.25).mean()
-    d2 = (thresh < 1.25 ** 2).mean()
-    d3 = (thresh < 1.25 ** 3).mean()
-
-    rmse = (gt - pred) ** 2
-    rmse = np.sqrt(rmse.mean())
-
-    rmse_log = (np.log(gt) - np.log(pred)) ** 2
-    rmse_log = np.sqrt(rmse_log.mean())
-
-    abs_rel = np.mean(np.abs(gt - pred) / gt)
-    sq_rel = np.mean(((gt - pred)**2) / gt)
-
-    err = np.log(pred) - np.log(gt)
-    silog = np.sqrt(np.mean(err ** 2) - np.mean(err) ** 2) * 100
-
-    err = np.abs(np.log10(pred) - np.log10(gt))
-    log10 = np.mean(err)
-
-    return silog, log10, abs_rel, sq_rel, rmse, rmse_log, d1, d2, d3
-
-def compute_rmse(gt, pred):
-
-    rmse = (gt - pred) ** 2
-    rmse = np.sqrt(rmse.mean())
-    return rmse
 
 def eval_rmse(pred_depths, gt, missing_i_samples):
     num_samples = len(pred_depths)
@@ -115,7 +83,7 @@ def eval(pred_depths, gt, missing_i_samples):
         pred_depths_valid.append(pred_depths[t_id])
 
     num_samples = num_samples - len(missing_i_samples)
-    print("removed: ", len(pred_depths) - len(pred_depths_valid), " samples")
+    #print("removed: ", len(pred_depths) - len(pred_depths_valid), " samples")
     pred_depths = pred_depths_valid
 
     silog = np.zeros(num_samples, np.float32)
@@ -144,14 +112,6 @@ def eval(pred_depths, gt, missing_i_samples):
 
         valid_mask = np.logical_and(gt_depth > min_depth_eval, gt_depth < max_depth_eval)
 
-        # if args.do_kb_crop:
-        #     height, width = gt_depth.shape
-        #     top_margin = int(height - 352)
-        #     left_margin = int((width - 1216) / 2)
-        #     pred_depth_uncropped = np.zeros((height, width), dtype=np.float32)
-        #     pred_depth_uncropped[top_margin:top_margin + 352, left_margin:left_margin + 1216] = pred_depth
-        #     pred_depth = pred_depth_uncropped
-
         if do_kb_crop:
             height, width = gt_depth.shape
             top_margin = int(height - 352)
@@ -177,22 +137,19 @@ def eval(pred_depths, gt, missing_i_samples):
 
         silog[i], log10[i], abs_rel[i], sq_rel[i], rms[i], log_rms[i], d1[i], d2[i], d3[i] = compute_errors(gt_depth[valid_mask], pred_depth[valid_mask])
 
-    print("{:>7}, {:>7}, {:>7}, {:>7}, {:>7}, {:>7}, {:>7}, {:>7}, {:>7}".format(
-        'd1', 'd2', 'd3', 'AbsRel', 'SqRel', 'RMSE', 'RMSElog', 'SILog', 'log10'))
-    print("{:7.3f}, {:7.3f}, {:7.3f}, {:7.3f}, {:7.3f}, {:7.3f}, {:7.3f}, {:7.3f}, {:7.3f}".format(
+    print("{:>7}, {:>7}, {:>7}, {:>7}, {:>7}, {:>7}, {:>7}, {:>7}".format(
+        'd1', 'd2', 'd3', 'AbsRel', 'SqRel', 'RMSE', 'RMSElog', 'log10'))
+    print("{:7.3f}, {:7.3f}, {:7.3f}, {:7.3f}, {:7.3f}, {:7.3f}, {:7.3f}, {:7.3f}".format(
         d1.mean(), d2.mean(), d3.mean(),
-        abs_rel.mean(), sq_rel.mean(), rms.mean(), log_rms.mean(), silog.mean(), log10.mean()))
+        abs_rel.mean(), sq_rel.mean(), rms.mean(), log_rms.mean(), log10.mean()))
 
     return silog, log10, abs_rel, sq_rel, rms, log_rms, d1, d2, d3
 
-def loadgt(outarray, config_dir):
-    #global missing_i_samples
+def loadgt(outarray, config_dir, ds_dir):
     missing_i_samples = []
 
-    #global missing_i_samples_train
     missing_i_samples_train = []
 
-    #global missing_i_samples_val
     missing_i_samples_val = []
 
     filenames_train = config_dir + "kitti_filenames_full_test_train.txt"
@@ -209,23 +166,15 @@ def loadgt(outarray, config_dir):
 
     i_train = 0
     i_val = 0
-
     for i_sample in range(len(outarray)):
 
         path = outarray[i_sample]['image_path']
-        # TODO
-        gt_depth_path = "/media/david/LinuxStorage/dataset/data_depth_annotated/gt/" + path.rsplit('/',4)[1] + "/proj_depth/groundtruth/image_02/" + path.rsplit('/',1)[1][:-4] + ".png"
-
+        gt_depth_path = os.path.join(ds_dir, "gt", path.rsplit('/',4)[1], "proj_depth/groundtruth/image_02/", path.rsplit('/',1)[1][:-4] + ".png")
         name = '/'.join(path.split('/')[-5:])
 
         if name[0] == '.':
             name = name[2:]
-        # file_dir = pred_filenames[t_id].split('.')[0]
-        # filename = file_dir.split('_')[-1]
-        # directory = file_dir.replace('_rgb_'+file_dir.split('_')[-1], '')
-        # gt_depth_path = os.path.join(args.gt_path, directory, 'sync_depth_' + filename + '.png')
 
-        #
         depth = cv2.imread(gt_depth_path, -1)
         if depth is None:
             #print('Missing: %s ' % gt_depth_path)
@@ -253,10 +202,10 @@ def loadgt(outarray, config_dir):
 
     print("num gt: ", len(gt_depths))
     print("num GT missing: ", len(missing_i_samples))
-    print("gt train: ", len(outarray_train))
-    print("gt val: ", len(outarray_val))
-    print("i_train", i_train)
-    print("i_val", i_val)
+    #print("gt train: ", len(outarray_train))
+    #print("gt val: ", len(outarray_val))
+    #print("i_train", i_train)
+    #print("i_val", i_val)
     return gt_depths, outarray_train, outarray_val, missing_i_samples, missing_i_samples_val, missing_i_samples_train
 
 def print_array(y, bts, vnl, gt, mis_sam):
@@ -267,14 +216,13 @@ def print_array(y, bts, vnl, gt, mis_sam):
         btsdepth = btssample['pred_depth']
         vnldepth = vnlsample['pred_depth']
         vnldepth = vnldepth * 80.0
-        #sharpnetdepth = sharpnetsample['pred_depth']
+
         # do calculation
-        calcdepth = calcmean(btsdepth, vnldepth, y[0], y[1])
+        calcdepth = calcmean2(btsdepth, vnldepth, y[0], y[1])
         calcoutarray.append(calcdepth)
 
     _,_,_,_,rms,_,_,_,_ = eval(calcoutarray, gt, mis_sam)
-    #rms = eval(calcoutarray)
-    print(y[0], " * BTS, ", y[1], " * VNL | RMSE: ", rms.mean())
+    print(y[0], " * BTS, ", y[1], " * VNL | RMSE: ", rms.mean(), "\n")
 
 def eval_array(y, bts, vnl, gt, mis_sam):
 
@@ -283,9 +231,9 @@ def eval_array(y, bts, vnl, gt, mis_sam):
         btsdepth = btssample['pred_depth']
         vnldepth = vnlsample['pred_depth']
         vnldepth = vnldepth * 80.0
-        #sharpnetdepth = sharpnetsample['pred_depth']
+
         # do calculation
-        calcdepth = calcmean(btsdepth, vnldepth, y[0], y[1])
+        calcdepth = calcmean2(btsdepth, vnldepth, y[0], y[1])
         calcoutarray.append(calcdepth)
 
     rms = eval_rmse(calcoutarray, gt, mis_sam)
@@ -309,22 +257,19 @@ def splitarray(array, config_dir):
     outarray_val = []
 
     for sample in array:
-        #print("k: ", sample['image_path'])
+
         normpath = os.path.normpath(sample['image_path'])
         name = '/'.join(normpath.split('/')[-5:])
-        #print("s: ", splitar)
-        #name = splitar[1] + '/' + splitar[2]
-        #print(name)
+
+
         if name[0] == '.':
             name = name[2:]
-        # print(name)
+
         if name in filetrain:
             outarray_train.append(sample)
         else:
             outarray_val.append(sample)
 
-    print("train: ", len(outarray_train))
-    print("val: ", len(outarray_val))
     return outarray_train, outarray_val
 
 
@@ -336,7 +281,7 @@ if __name__ == '__main__':
     parser.add_argument('--load_dir_path', type=str, help='Path to the dir where the binary files to load are stored', default='./data_save/')
     parser.add_argument('--save_name', type=str, help='The additional save name provided in the run script. Leave empty if not used.', default='')
     parser.add_argument('--run_optimizations', help='Run all weighted average optimizations', action='store_true')
-
+    parser.add_argument('--dataset_path', type=str, help='Path to the dataset dir', default='./datasets/kitti/')
 
     args = parser.parse_args()
 
@@ -356,8 +301,9 @@ if __name__ == '__main__':
     btsoutarray_train, btsoutarray_val = splitarray(btsoutarray, args.cfg_dir)
     vnloutarray_train, vnloutarray_val = splitarray(vnloutarray, args.cfg_dir)
 
+    print("Loading ground truths")
 
-    gt_depths, gt_depths_train, gt_depths_val, missing_i_samples, missing_i_samples_val, missing_i_samples_train = loadgt(btsoutarray, args.cfg_dir)
+    gt_depths, gt_depths_train, gt_depths_val, missing_i_samples, missing_i_samples_val, missing_i_samples_train = loadgt(btsoutarray, args.cfg_dir, args.dataset_path)
 
 
 

@@ -1,7 +1,7 @@
 --encoder densenet161_bts
---data_path ../dataset/nyu_depth_v2/official_splits/test/
+--data_path AUTOREPLACE
 --dataset nyu
---filenames_file ./bts_config/bts_filenames_full_test.txt
+--filenames_file AUTOREPLACE
 --model_name bts_nyu_v2_pytorch_densenet161
 --checkpoint_path ./bts/models/bts_nyu_v2_pytorch_densenet161/model
 --input_height 480

@@ -15,11 +15,11 @@ if __name__ == '__main__':
     parser.add_argument('--cfg_dir', type=str, help='Path to config dir', default='./bts_config/')
     # parser.add_argument('--bts_args_path', type=str, help='Path to bts args file', default='./bts_config/kitti_bts_arguments_partial_test_eigen.txt')
     parser.add_argument('--save_path', type=str, help='Path to the save dir', default='./data_save/')
-    parser.add_argument('--dataset_path', type=str, help='Path to the dataset dir', default='/media/david/LinuxStorage/dataset/data_depth_annotated/test/')
-        parser.add_argument('--filenames_path', type=str, help='Path to the filenames file', default='./bts_config/kitti_filenames_full_test.txt')
+    parser.add_argument('--dataset_path', type=str, help='Path to the dataset dir', default='./datasets/kitti/')
+    parser.add_argument('--filenames_path', type=str, help='Path to the filenames file', default='./bts_config/kitti_filenames_full_test.txt')
     parser.add_argument('--save_name', type=str, help='Appends \"_*save_name*\" to the model names in the save path', default='')
 
-
+    # '/media/david/LinuxStorage/dataset/data_depth_annotated/'
 
     args = parser.parse_args()
 
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     #
     # savearraydir = '/media/david/LinuxStorage/data_storage/'
 
-    bts = bts_obj(args.cfg_dir + 'kitti_bts_arguments_full_test_eigen.txt')
+    bts = bts_obj(args.cfg_dir + 'kitti_bts_arguments_full_test_eigen.txt', args.filenames_path, os.path.join(args.dataset_path, "test"), "kitti")
     vnl = vnl_obj("kitti")
 
 
@@ -47,13 +47,14 @@ if __name__ == '__main__':
     # #vnldatasetdir = "../dataset/nyu_depth_v2/official_splits/test/"
     # vnldatasetdir = "/media/david/LinuxStorage/dataset/data_depth_annotated/test/"
 
-    # print("RUNNING BTS")
-    btsoutarray = bts.run()
-#    btsoutarray = []
+
     print("RUNNING VNL")
-    vnloutarray = vnl.run(args.cfg_dir + 'kitti_filenames_full_test.txt', args.dataset_path)
-    #vnloutarray = vnl.run("bts_config/kitti_filenames_partial_test.txt", args.dataset_path)
-    #vnloutarray = []
+    vnloutarray = vnl.run(os.path.join(args.cfg_dir, 'kitti_filenames_full_test.txt'), os.path.join(args.dataset_path, "test"))
+
+    print("RUNNING BTS")
+    btsoutarray = bts.run()
+
+
     # saving bts and vnl array
 
     print("bts shape: ", btsoutarray[0]['pred_depth'].shape)

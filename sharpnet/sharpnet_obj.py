@@ -23,8 +23,8 @@ def round_down(num, divisor):
 
 
 class sharpnet_obj():
-    def __init__(self):
-
+    def __init__(self, dataset="nyu"):
+        self.dataset = dataset
         os.environ['CUDA_VISIBLE_DEVICES'] = str(cuda_device)
         self.device = torch.device("cuda" if cuda_device != '' else "cpu")
         print("Running on " + torch.cuda.get_device_name(self.device))
@@ -69,7 +69,7 @@ class sharpnet_obj():
                 if white:
                     imgname = imgname.replace(".jpg", "W.jpg")
                 #print(imgname.replace(".jpg", "W.jpg"))
-                fullpath = basedatasetpath + imgname
+                fullpath = os.path.join(basedatasetpath, imgname)
                 #print(fullpath)
 
                 with torch.no_grad():
@@ -79,8 +79,11 @@ class sharpnet_obj():
 
                     pred_depth = self.get_pred_from_input(image_pil)
                     #pred_depth = pred_depth.cpu().numpy().squeeze()
-
-                    outsample = {'pred_depth': pred_depth, 'image_path': fullpath}
+                    if self.dataset == "kitti":
+                        partial_image_path = os.sep.join(os.path.normpath(fullpath).split(os.sep)[-5:])
+                    else:
+                        partial_image_path = os.sep.join(os.path.normpath(fullpath).split(os.sep)[-2:])
+                    outsample = {'pred_depth': pred_depth, 'image_path': partial_image_path}
 
                     pred_depths.append(outsample)
         return pred_depths
