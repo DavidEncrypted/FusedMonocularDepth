@@ -273,7 +273,7 @@ if __name__ == '__main__':
     parser.add_argument('--load_dir_path', type=str, help='Path to the dir where the binary files to load are stored', default='./data_save/')
     parser.add_argument('--save_name', type=str, help='The additional save name provided in the run script. Leave empty if not used.', default='')
     parser.add_argument('--run_optimizations', help='Run all weighted average optimizations', action='store_true')
-    parser.add_argument('--dataset_path', type=str, help='Path to the dataset dir', default='./datasets/kitti/')
+    parser.add_argument('--dataset_path', type=str, help='Path to the dataset dir, must point to the \'data_depth_annotated\' folder.', default='./datasets/kitti/data_depth_annotated/')
 
     args = parser.parse_args()
 
