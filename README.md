@@ -28,7 +28,9 @@ Pytorch version 1.4.0 was used to run these models.
 # Download models
 ## BTS
 ```
-cd ./bts/models
+cd ./bts
+mkdir models
+cd models
 wget https://cogaplex-bts.s3.ap-northeast-2.amazonaws.com/bts_nyu_v2_pytorch_densenet161.zip
 wget https://cogaplex-bts.s3.ap-northeast-2.amazonaws.com/bts_eigen_v2_pytorch_densenet161.zip
 unzip bts_nyu_v2_pytorch_densenet161.zip
@@ -67,7 +69,7 @@ cd ../nyu
 wget http://horatio.cs.nyu.edu/mit/silberman/nyu_depth_v2/nyu_depth_v2_labeled.mat
 
 ###
-python3 extract_official_train_test_set_from_mat.py nyu_depth_v2_labeled.mat splits.mat ./nyu
+python3 extract_official_train_test_set_from_mat.py nyu_depth_v2_labeled.mat splits.mat .
 
 ```
 
