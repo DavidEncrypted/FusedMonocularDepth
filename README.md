@@ -1,3 +1,7 @@
+This repo contains the code for my thesis for the Bachelor of Computer Science at the University of Leiden.
+The file `thesis_final_v3.pdf` contains the thesis.
+
+
 # CREDITS:
 ```
 ### The code in ./bts and much of the evaluation code used in the load scripts
