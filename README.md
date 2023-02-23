@@ -1,3 +1,5 @@
+# Bachelors Thesis David Schep
+
 This repo contains the code for my thesis for the Bachelor of Computer Science at the University of Leiden.
 The file `thesis_final_v3.pdf` contains the thesis.
 
